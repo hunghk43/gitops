@@ -31,8 +31,6 @@ spec:
             key: password
           requireTLS: true
           sendResolved: true
-          headers:
-            subject: '[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }} — API SLO'
           html: |
             <h2>{{ .Status | toUpper }}: {{ .GroupLabels.alertname }}</h2>
             {{ range .Alerts }}
