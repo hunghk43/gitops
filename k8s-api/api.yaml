@@ -34,10 +34,20 @@ spec:
   strategy:
     canary:
       steps:
+        # Bước 1: thả 25% traffic vào canary
         - setWeight: 25
-        - pause: {}
+        # Bước 2: chạy analysis tự động thay vì pause tay
+        # Nếu success rate < 95% → tự abort về bản cũ
+        - analysis:
+            templates:
+              - templateName: api-success-rate
+            args:
+              - name: service-name
+                value: api
+        # Bước 3: promote lên 50% nếu analysis pass
         - setWeight: 50
         - pause: {duration: 30s}
+        # Bước 4: lên 100%
         - setWeight: 100
 ---
 apiVersion: v1

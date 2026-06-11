@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: api-success-rate
+  namespace: demo
+spec:
+  args:
+    - name: service-name
+      value: api
+  metrics:
+    - name: success-rate
+      # Chạy mỗi 30s, cần ít nhất 3 lần đo liên tiếp
+      interval: 30s
+      count: 3
+      # Nếu fail 2 lần → abort canary
+      failureLimit: 1
+      provider:
+        prometheus:
+          address: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+          query: |
+            sum(rate(flask_http_request_total{status!~"5..",kubernetes_namespace="demo"}[2m]))
+            /
+            sum(rate(flask_http_request_total{kubernetes_namespace="demo"}[2m]))
+      # SLO: success rate >= 95%
+      successCondition: result[0] >= 0.95
+      failureCondition: result[0] < 0.95

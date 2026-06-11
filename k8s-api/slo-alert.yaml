@@ -1,0 +1,68 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: api-slo-alerts
+  namespace: monitoring
+  labels:
+    # Phải match label selector của kube-prometheus-stack
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: api.slo
+      interval: 30s
+      rules:
+        # ── SLI recording rule ──────────────────────────────────────────────
+        - record: job:api_success_rate:ratio_rate5m
+          expr: |
+            sum(rate(flask_http_request_total{status!~"5..",kubernetes_namespace="demo"}[5m]))
+            /
+            sum(rate(flask_http_request_total{kubernetes_namespace="demo"}[5m]))
+
+        # ── SLO Alert: error rate vượt ngưỡng (fast burn 14.4x) ────────────
+        - alert: ApiHighErrorBudgetBurnRate
+          expr: |
+            (
+              sum(rate(flask_http_request_total{status=~"5..",kubernetes_namespace="demo"}[1h]))
+              /
+              sum(rate(flask_http_request_total{kubernetes_namespace="demo"}[1h]))
+            ) > (14.4 * 0.05)
+            and
+            (
+              sum(rate(flask_http_request_total{status=~"5..",kubernetes_namespace="demo"}[5m]))
+              /
+              sum(rate(flask_http_request_total{kubernetes_namespace="demo"}[5m]))
+            ) > (14.4 * 0.05)
+          for: 2m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "API error budget burning fast — SLO breach imminent"
+            description: |
+              Error rate burn rate > 14.4x (SLO = 95% success rate).
+              Current 5m error rate: {{ $value | humanizePercentage }}.
+              Error budget will be exhausted shortly — check canary rollout immediately.
+
+        # ── SLO Alert: slow/sustained burn ─────────────────────────────────
+        - alert: ApiMediumErrorBudgetBurnRate
+          expr: |
+            (
+              sum(rate(flask_http_request_total{status=~"5..",kubernetes_namespace="demo"}[6h]))
+              /
+              sum(rate(flask_http_request_total{kubernetes_namespace="demo"}[6h]))
+            ) > (6 * 0.05)
+            and
+            (
+              sum(rate(flask_http_request_total{status=~"5..",kubernetes_namespace="demo"}[30m]))
+              /
+              sum(rate(flask_http_request_total{kubernetes_namespace="demo"}[30m]))
+            ) > (6 * 0.05)
+          for: 15m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "API error budget burning at medium rate"
+            description: |
+              Error rate burn rate > 6x over 6h window (SLO = 95% success rate).
+              Current 30m error rate: {{ $value | humanizePercentage }}.
