@@ -14,23 +14,23 @@ spec:
         # ── SLI recording rule ──────────────────────────────────────────────
         - record: job:api_success_rate:ratio_rate5m
           expr: |
-            sum(rate(flask_http_request_total{status!~"5..",kubernetes_namespace="demo"}[5m]))
+            sum(rate(flask_http_request_total{status!~"5..",namespace="demo"}[5m]))
             /
-            sum(rate(flask_http_request_total{kubernetes_namespace="demo"}[5m]))
+            sum(rate(flask_http_request_total{namespace="demo"}[5m]))
 
         # ── SLO Alert: error rate vượt ngưỡng (fast burn 14.4x) ────────────
         - alert: ApiHighErrorBudgetBurnRate
           expr: |
             (
-              sum(rate(flask_http_request_total{status=~"5..",kubernetes_namespace="demo"}[1h]))
+              sum(rate(flask_http_request_total{status=~"5..",namespace="demo"}[1h]))
               /
-              sum(rate(flask_http_request_total{kubernetes_namespace="demo"}[1h]))
+              sum(rate(flask_http_request_total{namespace="demo"}[1h]))
             ) > (14.4 * 0.05)
             and
             (
-              sum(rate(flask_http_request_total{status=~"5..",kubernetes_namespace="demo"}[5m]))
+              sum(rate(flask_http_request_total{status=~"5..",namespace="demo"}[5m]))
               /
-              sum(rate(flask_http_request_total{kubernetes_namespace="demo"}[5m]))
+              sum(rate(flask_http_request_total{namespace="demo"}[5m]))
             ) > (14.4 * 0.05)
           for: 2m
           labels:
@@ -47,15 +47,15 @@ spec:
         - alert: ApiMediumErrorBudgetBurnRate
           expr: |
             (
-              sum(rate(flask_http_request_total{status=~"5..",kubernetes_namespace="demo"}[6h]))
+              sum(rate(flask_http_request_total{status=~"5..",namespace="demo"}[6h]))
               /
-              sum(rate(flask_http_request_total{kubernetes_namespace="demo"}[6h]))
+              sum(rate(flask_http_request_total{namespace="demo"}[6h]))
             ) > (6 * 0.05)
             and
             (
-              sum(rate(flask_http_request_total{status=~"5..",kubernetes_namespace="demo"}[30m]))
+              sum(rate(flask_http_request_total{status=~"5..",namespace="demo"}[30m]))
               /
-              sum(rate(flask_http_request_total{kubernetes_namespace="demo"}[30m]))
+              sum(rate(flask_http_request_total{namespace="demo"}[30m]))
             ) > (6 * 0.05)
           for: 15m
           labels:
