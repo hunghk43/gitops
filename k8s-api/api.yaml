@@ -14,6 +14,7 @@ spec:
     metadata:
       labels:
         app: api
+        version: v3
     spec:
       containers:
         - name: api
@@ -26,7 +27,7 @@ spec:
             - name: ERROR_RATE
               value: "0"
             - name: VERSION
-              value: "v2"
+              value: "v3"
           readinessProbe:
             httpGet:
               path: /healthz
