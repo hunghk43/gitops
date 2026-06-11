@@ -15,8 +15,9 @@ metadata:
   namespace: demo
   annotations:
     argocd.argoproj.io/sync-wave: "1"
+  badField: this-should-fail-validation
 spec:
-  replicas: 2
+  replicas: abc
   selector:
     matchLabels:
       app: web
