@@ -18,9 +18,15 @@ spec:
         prometheus:
           address: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
           query: |
-            sum(rate(flask_http_request_total{status!~"5..",kubernetes_namespace="demo"}[2m]))
+            (
+              sum(rate(flask_http_request_total{status!~"5..",kubernetes_namespace="demo"}[2m]))
+              or vector(0)
+            )
             /
-            sum(rate(flask_http_request_total{kubernetes_namespace="demo"}[2m]))
+            (
+              sum(rate(flask_http_request_total{kubernetes_namespace="demo"}[2m]))
+              or vector(1)
+            )
       # SLO: success rate >= 95%
       successCondition: result[0] >= 0.95
       failureCondition: result[0] < 0.95

@@ -31,11 +31,3 @@ spec:
             key: password
           requireTLS: true
           sendResolved: true
-          html: |
-            <h2>{{ .Status | toUpper }}: {{ .GroupLabels.alertname }}</h2>
-            {{ range .Alerts }}
-            <p><b>Summary:</b> {{ .Annotations.summary }}</p>
-            <p><b>Description:</b> {{ .Annotations.description }}</p>
-            <p><b>Severity:</b> {{ .Labels.severity }}</p>
-            <p><b>Started:</b> {{ .StartsAt }}</p>
-            {{ end }}
