@@ -1,13 +1,38 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
-metadata: { name: kube-prometheus-stack, namespace: argocd }
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
 spec:
+  project: default
   source:
     repoURL: https://prometheus-community.github.io/helm-charts
     chart: kube-prometheus-stack
-    targetRevision: 65.1.1
-    helm: { values: |    # repo: + ruleSelector, grafana adminPassword
-      prometheus: { prometheusSpec: { serviceMonitorSelectorNilUsesHelmValues: false } } }
-  destination: { server: https://kubernetes.default.svc, namespace: monitoring }
-  syncPolicy: { automated: { prune: true, selfHeal: true },
-                syncOptions: [CreateNamespace=true, ServerSideApply=true] }
+    targetRevision: "65.1.1"
+    helm:
+      values: |
+        grafana:
+          adminPassword: "accelerator123"
+          persistence:
+            enabled: false
+        prometheus:
+          prometheusSpec:
+            serviceMonitorSelectorNilUsesHelmValues: false
+            ruleSelector: {}
+            ruleNamespaceSelector: {}
+        kubeEtcd:
+          enabled: false
+        kubeControllerManager:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
