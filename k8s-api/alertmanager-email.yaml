@@ -2,14 +2,15 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 metadata:
   name: api-email-alert
-  namespace: demo
+  namespace: monitoring
   labels:
     app: api
 spec:
   route:
     matchers:
-      - name: namespace
-        value: demo
+      - name: alertname
+        matchType: =~
+        value: "Api.*"
     receiver: email-personal
     groupBy: [alertname, severity]
     groupWait: 30s

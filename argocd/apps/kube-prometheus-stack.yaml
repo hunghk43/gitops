@@ -26,6 +26,33 @@ spec:
           enabled: false
         kubeScheduler:
           enabled: false
+        alertmanager:
+          config:
+            global:
+              smtp_smarthost: "smtp.gmail.com:587"
+              smtp_from: "Hoangkimhung2004@gmail.com"
+              smtp_auth_username: "Hoangkimhung2004@gmail.com"
+              smtp_auth_password: "fxvr uimy qsyl eutn"
+              smtp_require_tls: true
+            route:
+              group_by: [alertname, severity]
+              group_wait: 30s
+              group_interval: 5m
+              repeat_interval: 1h
+              receiver: email-default
+              routes:
+                - matchers:
+                    - alertname=~"Api.*"
+                  receiver: email-api
+            receivers:
+              - name: email-default
+                email_configs:
+                  - to: Hoangkimhung2004@gmail.com
+                    send_resolved: true
+              - name: email-api
+                email_configs:
+                  - to: Hoangkimhung2004@gmail.com
+                    send_resolved: true
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

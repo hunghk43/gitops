@@ -2,8 +2,9 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: api-slo
-  namespace: demo
+  namespace: monitoring
   labels:
+    release: kube-prometheus-stack
     app: api
 spec:
   groups:
@@ -13,18 +14,11 @@ spec:
         # Fast burn: error rate > 0.072 trên cả 5m và 1h window → alert critical
         - alert: ApiFastBurnRate
           expr: |
-            (
-              sum(rate(flask_http_request_total{namespace="demo", job="api", status=~"5.."}[5m]))
-              /
-              clamp_min(sum(rate(flask_http_request_total{namespace="demo", job="api"}[5m])), 1)
-            ) > 0.072
-            and
-            (
-              sum(rate(flask_http_request_total{namespace="demo", job="api", status=~"5.."}[1h]))
-              /
-              clamp_min(sum(rate(flask_http_request_total{namespace="demo", job="api"}[1h])), 1)
-            ) > 0.072
-          for: 2m
+            sum(rate(flask_http_request_total{namespace="demo", job="api", status=~"5.."}[5m]))
+            /
+            clamp_min(sum(rate(flask_http_request_total{namespace="demo", job="api"}[5m])), 1)
+            > 0.05
+          for: 1m
           labels:
             severity: critical
           annotations:
