@@ -2,31 +2,28 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 metadata:
   name: api-email-alert
-  namespace: monitoring
+  namespace: demo
   labels:
-    release: kube-prometheus-stack
+    app: api
 spec:
   route:
-    # Chỉ xử lý alert có label team=platform
     matchers:
-      - name: team
-        value: platform
-    receiver: email-platform
+      - name: namespace
+        value: demo
+    receiver: email-personal
     groupBy: [alertname, severity]
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 1h
 
   receivers:
-    - name: email-platform
+    - name: email-personal
       emailConfigs:
         - to: Hoangkimhung2004@gmail.com
           from: alertmanager-gitops@gmail.com
           smarthost: smtp.gmail.com:587
           authUsername: alertmanager-gitops@gmail.com
           authPassword:
-            # Tạo secret: kubectl create secret generic alertmanager-smtp
-            #   --from-literal=password=<gmail-app-password> -n monitoring
             name: alertmanager-smtp
             key: password
           requireTLS: true

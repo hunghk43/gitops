@@ -6,27 +6,19 @@ metadata:
 spec:
   args:
     - name: service-name
-      value: api
   metrics:
     - name: success-rate
-      # Chạy mỗi 30s, cần ít nhất 3 lần đo liên tiếp
       interval: 30s
-      count: 3
-      # Nếu fail 2 lần → abort canary
+      count: 4
       failureLimit: 1
+      initialDelay: 30s
       provider:
         prometheus:
           address: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
           query: |
-            (
-              sum(rate(flask_http_request_total{status!~"5..",namespace="demo"}[2m]))
-              or vector(1)
-            )
+            sum(rate(flask_http_request_total{namespace="demo", app="{{args.service-name}}", status!~"5.."}[1m]))
             /
-            (
-              sum(rate(flask_http_request_total{namespace="demo"}[2m]))
-              or vector(1)
-            )
+            clamp_min(sum(rate(flask_http_request_total{namespace="demo", app="{{args.service-name}}"}[1m])), 1)
       # SLO: success rate >= 95%
       successCondition: result[0] >= 0.95
       failureCondition: result[0] < 0.95

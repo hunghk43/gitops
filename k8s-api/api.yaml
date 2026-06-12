@@ -14,7 +14,6 @@ spec:
     metadata:
       labels:
         app: api
-        version: v3
     spec:
       containers:
         - name: api
@@ -27,7 +26,7 @@ spec:
             - name: ERROR_RATE
               value: "0"
             - name: VERSION
-              value: "v3"
+              value: "v1"
           readinessProbe:
             httpGet:
               path: /healthz
@@ -35,20 +34,27 @@ spec:
   strategy:
     canary:
       steps:
-        # Bước 1: thả 25% traffic vào canary
         - setWeight: 25
-        # Bước 2: chạy analysis tự động thay vì pause tay
-        # Nếu success rate < 95% → tự abort về bản cũ
         - analysis:
             templates:
               - templateName: api-success-rate
             args:
               - name: service-name
                 value: api
-        # Bước 3: promote lên 50% nếu analysis pass
         - setWeight: 50
-        - pause: {duration: 30s}
-        # Bước 4: lên 100%
+        - analysis:
+            templates:
+              - templateName: api-success-rate
+            args:
+              - name: service-name
+                value: api
+        - setWeight: 75
+        - analysis:
+            templates:
+              - templateName: api-success-rate
+            args:
+              - name: service-name
+                value: api
         - setWeight: 100
 ---
 apiVersion: v1
@@ -65,3 +71,19 @@ spec:
     - name: http
       port: 8080
       targetPort: 8080
+---
+# Load generator — tạo traffic liên tục để Prometheus có data chấm Analysis
+apiVersion: v1
+kind: Pod
+metadata:
+  name: load
+  namespace: demo
+spec:
+  containers:
+    - name: load
+      image: busybox
+      command:
+        - sh
+        - -c
+        - "while true; do wget -qO- http://api.demo.svc.cluster.local:8080/; sleep 1; done"
+  restartPolicy: Always

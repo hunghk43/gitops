@@ -1,68 +1,53 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: api-slo-alerts
-  namespace: monitoring
+  name: api-slo
+  namespace: demo
   labels:
-    # Phải match label selector của kube-prometheus-stack
-    release: kube-prometheus-stack
+    app: api
 spec:
   groups:
-    - name: api.slo
-      interval: 30s
+    - name: api-slo
       rules:
-        # ── SLI recording rule ──────────────────────────────────────────────
-        - record: job:api_success_rate:ratio_rate5m
-          expr: |
-            sum(rate(flask_http_request_total{status!~"5..",namespace="demo"}[5m]))
-            /
-            sum(rate(flask_http_request_total{namespace="demo"}[5m]))
-
-        # ── SLO Alert: error rate vượt ngưỡng (fast burn 14.4x) ────────────
-        - alert: ApiHighErrorBudgetBurnRate
+        # SLO = 99.5% availability
+        # Fast burn: error rate > 0.072 trên cả 5m và 1h window → alert critical
+        - alert: ApiFastBurnRate
           expr: |
             (
-              sum(rate(flask_http_request_total{status=~"5..",namespace="demo"}[1h]))
+              sum(rate(flask_http_request_total{namespace="demo", app="api", status=~"5.."}[5m]))
               /
-              sum(rate(flask_http_request_total{namespace="demo"}[1h]))
-            ) > (14.4 * 0.05)
+              clamp_min(sum(rate(flask_http_request_total{namespace="demo", app="api"}[5m])), 1)
+            ) > 0.072
             and
             (
-              sum(rate(flask_http_request_total{status=~"5..",namespace="demo"}[5m]))
+              sum(rate(flask_http_request_total{namespace="demo", app="api", status=~"5.."}[1h]))
               /
-              sum(rate(flask_http_request_total{namespace="demo"}[5m]))
-            ) > (14.4 * 0.05)
+              clamp_min(sum(rate(flask_http_request_total{namespace="demo", app="api"}[1h])), 1)
+            ) > 0.072
           for: 2m
           labels:
             severity: critical
-            team: platform
           annotations:
-            summary: "API error budget burning fast — SLO breach imminent"
-            description: |
-              Error rate burn rate > 14.4x (SLO = 95% success rate).
-              Current 5m error rate: {{ $value | humanizePercentage }}.
-              Error budget will be exhausted shortly — check canary rollout immediately.
+            summary: "API fast burn rate is too high"
+            description: "API is burning the 99.5% availability error budget too quickly."
 
-        # ── SLO Alert: slow/sustained burn ─────────────────────────────────
-        - alert: ApiMediumErrorBudgetBurnRate
+        # Slow burn: error rate > 0.03 trên cả 30m và 6h window → alert warning
+        - alert: ApiSlowBurnRate
           expr: |
             (
-              sum(rate(flask_http_request_total{status=~"5..",namespace="demo"}[6h]))
+              sum(rate(flask_http_request_total{namespace="demo", app="api", status=~"5.."}[30m]))
               /
-              sum(rate(flask_http_request_total{namespace="demo"}[6h]))
-            ) > (6 * 0.05)
+              clamp_min(sum(rate(flask_http_request_total{namespace="demo", app="api"}[30m])), 1)
+            ) > 0.03
             and
             (
-              sum(rate(flask_http_request_total{status=~"5..",namespace="demo"}[30m]))
+              sum(rate(flask_http_request_total{namespace="demo", app="api", status=~"5.."}[6h]))
               /
-              sum(rate(flask_http_request_total{namespace="demo"}[30m]))
-            ) > (6 * 0.05)
-          for: 15m
+              clamp_min(sum(rate(flask_http_request_total{namespace="demo", app="api"}[6h])), 1)
+            ) > 0.03
+          for: 5m
           labels:
             severity: warning
-            team: platform
           annotations:
-            summary: "API error budget burning at medium rate"
-            description: |
-              Error rate burn rate > 6x over 6h window (SLO = 95% success rate).
-              Current 30m error rate: {{ $value | humanizePercentage }}.
+            summary: "API slow burn rate is elevated"
+            description: "API is steadily consuming the 99.5% availability error budget."
