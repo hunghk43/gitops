@@ -53,9 +53,9 @@ Pipeline:
 ### SLI query trong AnalysisTemplate
 
 ```promql
-sum(rate(flask_http_request_total{namespace="demo", app="api", status!~"5.."}[1m]))
+sum(rate(flask_http_request_total{namespace="demo", job="api", status!~"5.."}[1m]))
 /
-clamp_min(sum(rate(flask_http_request_total{namespace="demo", app="api"}[1m])), 1)
+clamp_min(sum(rate(flask_http_request_total{namespace="demo", job="api"}[1m])), 1)
 ```
 
 | Thành phần | Giải thích |
@@ -64,6 +64,7 @@ clamp_min(sum(rate(flask_http_request_total{namespace="demo", app="api"}[1m])), 
 | Mẫu số | Tổng rate tất cả request |
 | `clamp_min(..., 1)` | Tránh chia cho 0 khi chưa có traffic |
 | `status!~"5.."` | Loại bỏ HTTP 5xx (server error) |
+| `job="api"` | Label do ServiceMonitor gán — match với tên Service `api` |
 
 **Ngưỡng chấm:**
 - `result[0] >= 0.95` → Successful (pass bước canary)
@@ -80,6 +81,7 @@ Dùng 2 cửa sổ thời gian để tránh false positive (Google SRE pattern).
 ```promql
 (error_rate_5m > 0.072) AND (error_rate_1h > 0.072)
 ```
+where `error_rate = sum(rate(flask_http_request_total{namespace="demo", job="api", status=~"5.."}[window])) / clamp_min(..., 1)`
 
 - Ngưỡng `0.072` = 14.4× burn rate của SLO 99.5%
 - Ý nghĩa: đang tiêu error budget nhanh gấp 14.4 lần bình thường → sẽ hết budget trong ~2 giờ
@@ -179,7 +181,7 @@ git push
 Chạy query trên Prometheus UI:
 
 ```promql
-flask_http_request_total{namespace="demo", app="api"}
+flask_http_request_total{namespace="demo", job="api"}
 ```
 
 > Cần thấy: 4 time series trả về, mỗi pod 1 series, có giá trị tăng dần

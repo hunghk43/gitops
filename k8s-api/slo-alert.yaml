@@ -14,15 +14,15 @@ spec:
         - alert: ApiFastBurnRate
           expr: |
             (
-              sum(rate(flask_http_request_total{namespace="demo", app="api", status=~"5.."}[5m]))
+              sum(rate(flask_http_request_total{namespace="demo", job="api", status=~"5.."}[5m]))
               /
-              clamp_min(sum(rate(flask_http_request_total{namespace="demo", app="api"}[5m])), 1)
+              clamp_min(sum(rate(flask_http_request_total{namespace="demo", job="api"}[5m])), 1)
             ) > 0.072
             and
             (
-              sum(rate(flask_http_request_total{namespace="demo", app="api", status=~"5.."}[1h]))
+              sum(rate(flask_http_request_total{namespace="demo", job="api", status=~"5.."}[1h]))
               /
-              clamp_min(sum(rate(flask_http_request_total{namespace="demo", app="api"}[1h])), 1)
+              clamp_min(sum(rate(flask_http_request_total{namespace="demo", job="api"}[1h])), 1)
             ) > 0.072
           for: 2m
           labels:
@@ -35,15 +35,15 @@ spec:
         - alert: ApiSlowBurnRate
           expr: |
             (
-              sum(rate(flask_http_request_total{namespace="demo", app="api", status=~"5.."}[30m]))
+              sum(rate(flask_http_request_total{namespace="demo", job="api", status=~"5.."}[30m]))
               /
-              clamp_min(sum(rate(flask_http_request_total{namespace="demo", app="api"}[30m])), 1)
+              clamp_min(sum(rate(flask_http_request_total{namespace="demo", job="api"}[30m])), 1)
             ) > 0.03
             and
             (
-              sum(rate(flask_http_request_total{namespace="demo", app="api", status=~"5.."}[6h]))
+              sum(rate(flask_http_request_total{namespace="demo", job="api", status=~"5.."}[6h]))
               /
-              clamp_min(sum(rate(flask_http_request_total{namespace="demo", app="api"}[6h])), 1)
+              clamp_min(sum(rate(flask_http_request_total{namespace="demo", job="api"}[6h])), 1)
             ) > 0.03
           for: 5m
           labels:
