@@ -11,7 +11,7 @@ spec:
       interval: 30s
       count: 4
       failureLimit: 1
-      initialDelay: 10s
+      initialDelay: 30s
       provider:
         prometheus:
           address: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090

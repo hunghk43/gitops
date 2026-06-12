@@ -14,20 +14,19 @@ spec:
     metadata:
       labels:
         app: api
-        track: canary-bad
     spec:
       containers:
         - name: api
-          image: w9-api:1
+          image: w9-api:2
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
               containerPort: 8080
           env:
             - name: ERROR_RATE
-              value: "0.8"
+              value: "0"
             - name: VERSION
-              value: "v3-bad"
+              value: "v2"
           readinessProbe:
             httpGet:
               path: /healthz
@@ -86,5 +85,5 @@ spec:
       command:
         - sh
         - -c
-        - "while true; do wget -qO- http://api.demo.svc.cluster.local:8080/; sleep 0.2; done"
+        - "while true; do wget -qO- http://api.demo.svc.cluster.local:8080/; sleep 1; done"
   restartPolicy: Always
